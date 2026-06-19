@@ -5,20 +5,7 @@ const P4 = ["Basic concepts","Residence & scope","Income from salaries","Income 
 const P5 = ["GST: Basic concepts","Supply","Charge of GST","Exemptions","Time of supply","Value of supply","Input tax credit","Registration","Tax invoice","Accounts & records","Returns","Payment of tax","Refunds","Assessment & audit","Demands & recovery","Inspection & search","Offences & penalties","Appeals & revision","Customs","FTP overview"];
 const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
 const STATUSES = ['Not started','In progress','Completed','Revision done'];
-const STATUS_COLOR = { 'Not started': '#3a1a1a', 'In progress': '#3a2e1a', 'Completed': '#1a3a1a', 'Revision done': '#1a2e3a' };
-const STATUS_TEXT = { 'Not started': '#ff6b6b', 'In progress': '#ffd93d', 'Completed': '#6bcb77', 'Revision done': '#4dd9ff' };
-const QUOTES = [
-  "Success is the sum of small efforts, repeated day in and day out.",
-  "The secret of getting ahead is getting started.",
-  "Don't watch the clock; do what it does. Keep going.",
-  "Believe you can and you're halfway there.",
-  "Your only limit is your mind.",
-  "Push yourself, because no one else is going to do it for you.",
-  "Great things never come from comfort zones.",
-  "Dream it. Wish it. Do it.",
-  "Success doesn't just find you. You have to go out and get it.",
-  "The harder you work for something, the greater you'll feel when you achieve it."
-];
+const QUOTES = ["Success is the sum of small efforts, repeated day in and day out.","The secret of getting ahead is getting started.","Don't watch the clock; do what it does. Keep going.","Believe you can and you're halfway there.","Your only limit is your mind.","Push yourself, because no one else is going to do it for you.","Great things never come from comfort zones.","Dream it. Wish it. Do it.","The harder you work for something, the greater you'll feel when you achieve it.","Study hard, for the well is deep and our brains are shallow."];
 
 export default function Dashboard({ profile, onLogout }) {
   const [tab, setTab] = useState('dashboard');
@@ -32,12 +19,12 @@ export default function Dashboard({ profile, onLogout }) {
   const [pomodoroRunning, setPomodoroRunning] = useState(false);
   const [pomodoroMode, setPomodoroMode] = useState('study');
   const [waterCount, setWaterCount] = useState(0);
-  const [breakStart, setBreakStart] = useState(null);
   const [breakElapsed, setBreakElapsed] = useState(0);
   const [breakRunning, setBreakRunning] = useState(false);
   const [quote] = useState(QUOTES[Math.floor(Math.random() * QUOTES.length)]);
   const [signInTime] = useState(new Date());
   const [timeOnApp, setTimeOnApp] = useState(0);
+  const [expandedChapter, setExpandedChapter] = useState(null);
   const pomodoroRef = useRef(null);
   const breakRef = useRef(null);
   const appTimeRef = useRef(null);
@@ -45,28 +32,21 @@ export default function Dashboard({ profile, onLogout }) {
   function today() { return new Date().toISOString().split('T')[0]; }
 
   useEffect(() => { loadAll(); }, []);
-
   useEffect(() => {
     appTimeRef.current = setInterval(() => setTimeOnApp(t => t + 1), 1000);
     return () => clearInterval(appTimeRef.current);
   }, []);
-
   useEffect(() => {
     if (pomodoroRunning) {
       pomodoroRef.current = setInterval(() => {
-        setPomodoroTime(t => {
-          if (t <= 1) { clearInterval(pomodoroRef.current); setPomodoroRunning(false); return 0; }
-          return t - 1;
-        });
+        setPomodoroTime(t => { if (t <= 1) { clearInterval(pomodoroRef.current); setPomodoroRunning(false); return 0; } return t - 1; });
       }, 1000);
     } else clearInterval(pomodoroRef.current);
     return () => clearInterval(pomodoroRef.current);
   }, [pomodoroRunning]);
-
   useEffect(() => {
-    if (breakRunning) {
-      breakRef.current = setInterval(() => setBreakElapsed(t => t + 1), 1000);
-    } else clearInterval(breakRef.current);
+    if (breakRunning) { breakRef.current = setInterval(() => setBreakElapsed(t => t + 1), 1000); }
+    else clearInterval(breakRef.current);
     return () => clearInterval(breakRef.current);
   }, [breakRunning]);
 
@@ -88,9 +68,8 @@ export default function Dashboard({ profile, onLogout }) {
     const [eh, em] = e.split(':').map(Number);
     return Math.max(0, (eh * 60 + em) - (sh * 60 + sm));
   }
-
   function fmtDur(m) { return m < 60 ? m + 'm' : Math.floor(m / 60) + 'h ' + (m % 60 ? m % 60 + 'm' : ''); }
-  function fmtSecs(s) { return `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`; }
+  function fmtSecs(s) { return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`; }
   function showAlert(msg) { setAlert(msg); setTimeout(() => setAlert(''), 3000); }
 
   async function saveLog() {
@@ -100,7 +79,6 @@ export default function Dashboard({ profile, onLogout }) {
     const { error } = await supabase.from('study_sessions').insert({ ...logForm, user_id: profile.id, duration_mins: dur });
     if (!error) { showAlert('✅ Session saved!'); setLogForm(f => ({ ...f, topic: '', start_time: '', end_time: '', notes: '' })); loadAll(); }
   }
-
   async function saveTT() {
     if (!ttForm.start_time || !ttForm.end_time) { showAlert('Please fill start and end time'); return; }
     const dur = calcDur(ttForm.start_time, ttForm.end_time);
@@ -108,44 +86,21 @@ export default function Dashboard({ profile, onLogout }) {
     const { error } = await supabase.from('timetable').insert({ ...ttForm, user_id: profile.id, duration_mins: dur });
     if (!error) { showAlert('✅ Slot added!'); setTtForm(f => ({ ...f, start_time: '', end_time: '', topic: '' })); loadAll(); }
   }
-
   async function deleteLog(id) { await supabase.from('study_sessions').delete().eq('id', id); loadAll(); }
   async function deleteTT(id) { await supabase.from('timetable').delete().eq('id', id); loadAll(); }
-
   async function updateChapter(paper, idx, name, status) {
     const existing = chapters.find(c => c.paper === paper && c.chapter_index === idx);
     if (existing) await supabase.from('chapter_progress').update({ status }).eq('id', existing.id);
     else await supabase.from('chapter_progress').insert({ user_id: profile.id, paper, chapter_index: idx, chapter_name: name, status });
     loadAll();
   }
-
-  async function saveChapterNote(paper, idx, name, note) {
+  async function updateChapterNote(paper, idx, name, note) {
     const existing = chapters.find(c => c.paper === paper && c.chapter_index === idx);
     if (existing) await supabase.from('chapter_progress').update({ notes: note }).eq('id', existing.id);
     else await supabase.from('chapter_progress').insert({ user_id: profile.id, paper, chapter_index: idx, chapter_name: name, notes: note, status: 'Not started' });
-    loadAll();
   }
-
-  function getChapterStatus(paper, idx) {
-    const c = chapters.find(c => c.paper === paper && c.chapter_index === idx);
-    return c ? c.status : 'Not started';
-  }
-
-  function getChapterNote(paper, idx) {
-    const c = chapters.find(c => c.paper === paper && c.chapter_index === idx);
-    return c ? (c.notes || '') : '';
-  }
-
-  function startPomodoro(mode) {
-    setPomodoroMode(mode);
-    setPomodoroTime(mode === 'study' ? 25 * 60 : mode === 'short' ? 5 * 60 : 15 * 60);
-    setPomodoroRunning(true);
-  }
-
-  function toggleBreak() {
-    if (breakRunning) { setBreakRunning(false); }
-    else { setBreakElapsed(0); setBreakRunning(true); }
-  }
+  function getChapterStatus(paper, idx) { const c = chapters.find(c => c.paper === paper && c.chapter_index === idx); return c ? c.status : 'Not started'; }
+  function getChapterNote(paper, idx) { const c = chapters.find(c => c.paper === paper && c.chapter_index === idx); return c ? (c.notes || '') : ''; }
 
   const totalMins = logs.reduce((a, l) => a + (l.duration_mins || 0), 0);
   const todayMins = logs.filter(l => l.date === today()).reduce((a, l) => a + (l.duration_mins || 0), 0);
@@ -155,124 +110,158 @@ export default function Dashboard({ profile, onLogout }) {
   const p4Done = chapters.filter(c => c.paper.includes('4') && c.status === 'Completed').length;
   const p5Done = chapters.filter(c => c.paper.includes('5') && c.status === 'Completed').length;
 
+  const statusColors = { 'Not started': { bg: '#FEF2F2', text: '#DC2626', border: '#FECACA' }, 'In progress': { bg: '#FFFBEB', text: '#D97706', border: '#FDE68A' }, 'Completed': { bg: '#F0FDF4', text: '#16A34A', border: '#BBF7D0' }, 'Revision done': { bg: '#EFF6FF', text: '#2563EB', border: '#BFDBFE' } };
+
   return (
-    <div style={s.app}>
-      <div style={s.header}>
-        <div>
-          <p style={s.headerTitle}>📖 CA Final Planner</p>
-          <p style={s.headerSub}>{profile.full_name} · {profile.batch} · Signed in at {signInTime.toLocaleTimeString()} · Session: {fmtSecs(timeOnApp)}</p>
+    <div style={{ minHeight: '100vh', background: '#F3F4F6', fontFamily: '-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif' }}>
+      {/* Header */}
+      <div style={{ background: 'linear-gradient(135deg, #1a3c5e 0%, #2d6a9f 100%)', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 56, boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <span style={{ fontSize: 22 }}>📖</span>
+          <div>
+            <p style={{ color: '#fff', fontWeight: 700, fontSize: 15, margin: 0 }}>CA Final Study Planner</p>
+            <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: 11, margin: 0 }}>{profile.full_name} · {profile.batch} · {signInTime.toLocaleTimeString()} · {fmtSecs(timeOnApp)}</p>
+          </div>
         </div>
-        <button style={s.logoutBtn} onClick={onLogout}>Sign out</button>
+        <button onClick={onLogout} style={{ background: 'rgba(255,255,255,0.15)', color: '#fff', border: '1px solid rgba(255,255,255,0.3)', borderRadius: 6, padding: '6px 16px', fontSize: 13, cursor: 'pointer' }}>Sign out</button>
       </div>
 
-      <div style={s.tabs}>
-        {[['dashboard','🏠'],['log','⏱'],['timetable','📅'],['chapters','📚'],['tools','🛠']].map(([id, icon]) => (
-          <button key={id} style={{ ...s.tab, ...(tab === id ? s.activeTab : {}) }} onClick={() => setTab(id)}>{icon} {id.charAt(0).toUpperCase() + id.slice(1)}</button>
+      {/* Nav */}
+      <div style={{ background: '#fff', borderBottom: '1px solid #E5E7EB', padding: '0 24px', display: 'flex', gap: 0, overflowX: 'auto' }}>
+        {[['dashboard', '🏠', 'Dashboard'], ['log', '⏱', 'Log Session'], ['timetable', '📅', 'Timetable'], ['chapters', '📚', 'Chapters'], ['tools', '🛠', 'Tools']].map(([id, icon, label]) => (
+          <button key={id} onClick={() => setTab(id)} style={{ padding: '14px 20px', fontSize: 13, border: 'none', background: 'none', cursor: 'pointer', color: tab === id ? '#1a3c5e' : '#6B7280', borderBottom: tab === id ? '2px solid #1a3c5e' : '2px solid transparent', fontWeight: tab === id ? 600 : 400, whiteSpace: 'nowrap' }}>
+            {icon} {label}
+          </button>
         ))}
       </div>
 
-      {alert && <div style={s.alert}>{alert}</div>}
+      {alert && <div style={{ background: '#D1FAE5', color: '#065F46', padding: '10px 24px', fontSize: 13, borderBottom: '1px solid #A7F3D0' }}>{alert}</div>}
 
-      <div style={s.content}>
+      <div style={{ padding: '20px 24px', maxWidth: 900, margin: '0 auto' }}>
+
         {tab === 'dashboard' && (
           <div>
-            <div style={s.quoteBox}>💡 "{quote}"</div>
-            <div style={s.countdown}>
-              <div><p style={s.cdLabel}>Days to Nov 2026 Exam</p><p style={s.cdVal}>{daysLeft} days left</p></div>
-              <div style={{ textAlign: 'right' }}><p style={s.cdLabel}>Batch</p><p style={{ fontWeight: 600, color: '#059669' }}>{profile.batch}</p></div>
+            {/* Quote */}
+            <div style={{ background: '#fff', border: '1px solid #E5E7EB', borderLeft: '4px solid #2d6a9f', borderRadius: 8, padding: '12px 16px', marginBottom: 20 }}>
+              <p style={{ color: '#374151', fontSize: 13, fontStyle: 'italic', margin: 0 }}>💡 "{quote}"</p>
             </div>
-            <div style={s.metricGrid}>
-              {[['📚 Total studied', fmtDur(totalMins)],['⏰ Today', fmtDur(todayMins)],['📄 Paper 4', fmtDur(p4Mins)],['📄 Paper 5', fmtDur(p5Mins)]].map(([l, v]) => (
-                <div key={l} style={s.metric}><p style={s.metricVal}>{v}</p><p style={s.metricLbl}>{l}</p></div>
-              ))}
+
+            {/* Exam countdown */}
+            <div style={{ background: 'linear-gradient(135deg, #1a3c5e, #2d6a9f)', borderRadius: 10, padding: '20px 24px', marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: 12, margin: '0 0 4px' }}>Days to Nov 2026 Exam</p>
+                <p style={{ color: '#fff', fontSize: 32, fontWeight: 700, margin: 0 }}>{daysLeft} <span style={{ fontSize: 16, fontWeight: 400 }}>days left</span></p>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: 12, margin: '0 0 4px' }}>Batch</p>
+                <p style={{ color: '#fff', fontSize: 16, fontWeight: 600, margin: 0 }}>{profile.batch}</p>
+              </div>
             </div>
-            <div style={s.metricGrid}>
-              {[['✅ P4 chapters done', `${p4Done}/${P4.length}`],['✅ P5 chapters done', `${p5Done}/${P5.length}`],['💧 Water today', `${waterCount} glasses`],['⏱ Session time', fmtSecs(timeOnApp)]].map(([l, v]) => (
-                <div key={l} style={s.metric}><p style={s.metricVal}>{v}</p><p style={s.metricLbl}>{l}</p></div>
-              ))}
-            </div>
-            <div style={s.card}>
-              <p style={s.cardTitle}>Recent sessions</p>
-              {logs.slice(0, 5).map(l => (
-                <div key={l.id} style={s.logRow}>
-                  <div style={s.logDot}></div>
-                  <div style={{ flex: 1 }}>
-                    <p style={s.logTitle}>{l.topic} <span style={{ ...s.badge, background: l.paper.includes('4') ? '#d1fae5' : '#d1fae5', color: l.paper.includes('4') ? '#059669' : '#6ee7b7' }}>{l.paper.includes('4') ? 'P4' : 'P5'}</span></p>
-                    <p style={s.logMeta}>{l.date} · {l.start_time}–{l.end_time} · {fmtDur(l.duration_mins)} · {l.session_type}</p>
-                  </div>
+
+            {/* Metrics grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12, marginBottom: 20 }}>
+              {[
+                { icon: '📚', label: 'Total Studied', value: fmtDur(totalMins), color: '#2d6a9f' },
+                { icon: '⏰', label: 'Today', value: fmtDur(todayMins), color: '#059669' },
+                { icon: '📄', label: 'Paper 4', value: fmtDur(p4Mins), color: '#7C3AED' },
+                { icon: '📄', label: 'Paper 5', value: fmtDur(p5Mins), color: '#DB2777' },
+                { icon: '✅', label: 'P4 Chapters', value: `${p4Done}/${P4.length}`, color: '#D97706' },
+                { icon: '✅', label: 'P5 Chapters', value: `${p5Done}/${P5.length}`, color: '#0891B2' },
+                { icon: '💧', label: 'Water Today', value: `${waterCount} glasses`, color: '#2563EB' },
+                { icon: '⏱', label: 'Session Time', value: fmtSecs(timeOnApp), color: '#16A34A' },
+              ].map((m, i) => (
+                <div key={i} style={{ background: '#fff', border: '1px solid #E5E7EB', borderRadius: 8, padding: '16px', textAlign: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+                  <div style={{ fontSize: 24, marginBottom: 6 }}>{m.icon}</div>
+                  <p style={{ fontSize: 20, fontWeight: 700, color: m.color, margin: '0 0 4px' }}>{m.value}</p>
+                  <p style={{ fontSize: 11, color: '#6B7280', margin: 0 }}>{m.label}</p>
                 </div>
               ))}
-              {logs.length === 0 && <p style={s.empty}>No sessions logged yet</p>}
+            </div>
+
+            {/* Recent sessions */}
+            <div style={{ background: '#fff', border: '1px solid #E5E7EB', borderRadius: 8, padding: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+              <p style={{ fontSize: 14, fontWeight: 600, color: '#111827', marginBottom: 12 }}>Recent Sessions</p>
+              {logs.slice(0, 5).map(l => (
+                <div key={l.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: '1px solid #F3F4F6' }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 8, background: l.paper.includes('4') ? '#EEF2FF' : '#F0FDF4', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>{l.paper.includes('4') ? '📘' : '📗'}</div>
+                  <div style={{ flex: 1 }}>
+                    <p style={{ fontSize: 13, fontWeight: 500, color: '#111827', margin: '0 0 2px' }}>{l.topic}</p>
+                    <p style={{ fontSize: 11, color: '#9CA3AF', margin: 0 }}>{l.date} · {l.start_time}–{l.end_time} · {fmtDur(l.duration_mins)} · {l.session_type}</p>
+                  </div>
+                  <span style={{ fontSize: 11, background: l.paper.includes('4') ? '#EEF2FF' : '#F0FDF4', color: l.paper.includes('4') ? '#4338CA' : '#16A34A', padding: '2px 8px', borderRadius: 4, fontWeight: 500 }}>{l.paper.includes('4') ? 'P4' : 'P5'}</span>
+                </div>
+              ))}
+              {logs.length === 0 && <p style={{ color: '#9CA3AF', fontSize: 13, textAlign: 'center', padding: '20px 0' }}>No sessions logged yet</p>}
             </div>
           </div>
         )}
 
         {tab === 'log' && (
           <div>
-            <div style={s.card}>
-              <p style={s.cardTitle}>Log a study session</p>
-              <Field label="Date"><input style={s.input} type="date" value={logForm.date} onChange={e => setLogForm(f => ({ ...f, date: e.target.value }))} /></Field>
-              <div style={s.row}>
-                <Field label="Paper"><select style={s.input} value={logForm.paper} onChange={e => setLogForm(f => ({ ...f, paper: e.target.value }))}><option>Paper 4 – Direct Tax</option><option>Paper 5 – Indirect Tax</option></select></Field>
-                <Field label="Topic"><input style={s.input} type="text" value={logForm.topic} onChange={e => setLogForm(f => ({ ...f, topic: e.target.value }))} placeholder="e.g. PGBP" /></Field>
+            <div style={{ background: '#fff', border: '1px solid #E5E7EB', borderRadius: 8, padding: '20px', marginBottom: 16, boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+              <p style={{ fontSize: 15, fontWeight: 600, color: '#111827', marginBottom: 16 }}>Log a Study Session</p>
+              <Field label="Date"><input style={inp} type="date" value={logForm.date} onChange={e => setLogForm(f => ({ ...f, date: e.target.value }))} /></Field>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <Field label="Paper"><select style={inp} value={logForm.paper} onChange={e => setLogForm(f => ({ ...f, paper: e.target.value }))}><option>Paper 4 – Direct Tax</option><option>Paper 5 – Indirect Tax</option></select></Field>
+                <Field label="Topic"><input style={inp} type="text" value={logForm.topic} onChange={e => setLogForm(f => ({ ...f, topic: e.target.value }))} placeholder="e.g. PGBP" /></Field>
               </div>
-              <div style={s.row}>
-                <Field label="Start time"><input style={s.input} type="time" value={logForm.start_time} onChange={e => setLogForm(f => ({ ...f, start_time: e.target.value }))} /></Field>
-                <Field label="End time"><input style={s.input} type="time" value={logForm.end_time} onChange={e => setLogForm(f => ({ ...f, end_time: e.target.value }))} /></Field>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <Field label="Start time"><input style={inp} type="time" value={logForm.start_time} onChange={e => setLogForm(f => ({ ...f, start_time: e.target.value }))} /></Field>
+                <Field label="End time"><input style={inp} type="time" value={logForm.end_time} onChange={e => setLogForm(f => ({ ...f, end_time: e.target.value }))} /></Field>
               </div>
-              <Field label="Session type"><select style={s.input} value={logForm.session_type} onChange={e => setLogForm(f => ({ ...f, session_type: e.target.value }))}><option>Study</option><option>Revision</option><option>Practice</option><option>Mock</option></select></Field>
-              <Field label="Notes (optional)"><textarea style={{ ...s.input, minHeight: 70, resize: 'vertical' }} value={logForm.notes} onChange={e => setLogForm(f => ({ ...f, notes: e.target.value }))} placeholder="Key points, doubts..." /></Field>
-              <button style={s.btn} onClick={saveLog}>+ Save Session</button>
+              <Field label="Session type"><select style={inp} value={logForm.session_type} onChange={e => setLogForm(f => ({ ...f, session_type: e.target.value }))}><option>Study</option><option>Revision</option><option>Practice</option><option>Mock</option></select></Field>
+              <Field label="Notes (optional)"><textarea style={{ ...inp, minHeight: 70, resize: 'vertical' }} value={logForm.notes} onChange={e => setLogForm(f => ({ ...f, notes: e.target.value }))} placeholder="Key points, doubts..." /></Field>
+              <button style={btnPrimary} onClick={saveLog}>+ Save Session</button>
             </div>
-            <div style={s.card}>
-              <p style={s.cardTitle}>All sessions</p>
+            <div style={{ background: '#fff', border: '1px solid #E5E7EB', borderRadius: 8, padding: '20px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+              <p style={{ fontSize: 15, fontWeight: 600, color: '#111827', marginBottom: 12 }}>All Sessions</p>
               {logs.map(l => (
-                <div key={l.id} style={s.logRow}>
-                  <div style={s.logDot}></div>
+                <div key={l.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '10px 0', borderBottom: '1px solid #F3F4F6' }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 8, background: l.paper.includes('4') ? '#EEF2FF' : '#F0FDF4', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}>{l.paper.includes('4') ? '📘' : '📗'}</div>
                   <div style={{ flex: 1 }}>
-                    <p style={s.logTitle}>{l.topic} <span style={{ ...s.badge, background: l.paper.includes('4') ? '#d1fae5' : '#d1fae5', color: l.paper.includes('4') ? '#059669' : '#6ee7b7' }}>{l.paper.includes('4') ? 'P4' : 'P5'}</span></p>
-                    <p style={s.logMeta}>{l.date} · {l.start_time}–{l.end_time} · {fmtDur(l.duration_mins)}</p>
-                    {l.notes && <p style={{ ...s.logMeta, fontStyle: 'italic' }}>{l.notes}</p>}
+                    <p style={{ fontSize: 13, fontWeight: 500, color: '#111827', margin: '0 0 2px' }}>{l.topic}</p>
+                    <p style={{ fontSize: 11, color: '#9CA3AF', margin: 0 }}>{l.date} · {l.start_time}–{l.end_time} · {fmtDur(l.duration_mins)} · {l.session_type}</p>
+                    {l.notes && <p style={{ fontSize: 11, color: '#6B7280', margin: '2px 0 0', fontStyle: 'italic' }}>{l.notes}</p>}
                   </div>
-                  <button style={s.delBtn} onClick={() => deleteLog(l.id)}>✕</button>
+                  <button onClick={() => deleteLog(l.id)} style={{ background: 'none', border: 'none', color: '#D1D5DB', cursor: 'pointer', fontSize: 16 }}>✕</button>
                 </div>
               ))}
-              {logs.length === 0 && <p style={s.empty}>No sessions yet</p>}
+              {logs.length === 0 && <p style={{ color: '#9CA3AF', fontSize: 13, textAlign: 'center', padding: 20 }}>No sessions yet</p>}
             </div>
           </div>
         )}
 
         {tab === 'timetable' && (
           <div>
-            <div style={s.card}>
-              <p style={s.cardTitle}>Add timetable slot</p>
-              <div style={s.row}>
-                <Field label="Day"><select style={s.input} value={ttForm.day} onChange={e => setTtForm(f => ({ ...f, day: e.target.value }))}>{DAYS.map(d => <option key={d}>{d}</option>)}</select></Field>
-                <Field label="Paper"><select style={s.input} value={ttForm.paper} onChange={e => setTtForm(f => ({ ...f, paper: e.target.value }))}><option>Paper 4 – Direct Tax</option><option>Paper 5 – Indirect Tax</option></select></Field>
+            <div style={{ background: '#fff', border: '1px solid #E5E7EB', borderRadius: 8, padding: '20px', marginBottom: 16, boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+              <p style={{ fontSize: 15, fontWeight: 600, color: '#111827', marginBottom: 16 }}>Add Timetable Slot</p>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <Field label="Day"><select style={inp} value={ttForm.day} onChange={e => setTtForm(f => ({ ...f, day: e.target.value }))}>{DAYS.map(d => <option key={d}>{d}</option>)}</select></Field>
+                <Field label="Paper"><select style={inp} value={ttForm.paper} onChange={e => setTtForm(f => ({ ...f, paper: e.target.value }))}><option>Paper 4 – Direct Tax</option><option>Paper 5 – Indirect Tax</option></select></Field>
               </div>
-              <div style={s.row}>
-                <Field label="Start"><input style={s.input} type="time" value={ttForm.start_time} onChange={e => setTtForm(f => ({ ...f, start_time: e.target.value }))} /></Field>
-                <Field label="End"><input style={s.input} type="time" value={ttForm.end_time} onChange={e => setTtForm(f => ({ ...f, end_time: e.target.value }))} /></Field>
-                <Field label="Topic"><input style={s.input} type="text" value={ttForm.topic} onChange={e => setTtForm(f => ({ ...f, topic: e.target.value }))} placeholder="e.g. PGBP" /></Field>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+                <Field label="Start"><input style={inp} type="time" value={ttForm.start_time} onChange={e => setTtForm(f => ({ ...f, start_time: e.target.value }))} /></Field>
+                <Field label="End"><input style={inp} type="time" value={ttForm.end_time} onChange={e => setTtForm(f => ({ ...f, end_time: e.target.value }))} /></Field>
+                <Field label="Topic"><input style={inp} type="text" value={ttForm.topic} onChange={e => setTtForm(f => ({ ...f, topic: e.target.value }))} placeholder="e.g. PGBP" /></Field>
               </div>
-              <button style={s.btn} onClick={saveTT}>+ Add Slot</button>
+              <button style={btnPrimary} onClick={saveTT}>+ Add Slot</button>
             </div>
-            <div style={s.card}>
-              <p style={s.cardTitle}>Weekly timetable</p>
+            <div style={{ background: '#fff', border: '1px solid #E5E7EB', borderRadius: 8, padding: '20px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+              <p style={{ fontSize: 15, fontWeight: 600, color: '#111827', marginBottom: 12 }}>Weekly Timetable</p>
               {DAYS.filter(d => timetable.some(t => t.day === d)).map(day => (
                 <div key={day} style={{ marginBottom: 16 }}>
-                  <p style={s.dayHeader}>{day}</p>
+                  <p style={{ fontSize: 12, fontWeight: 600, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>{day}</p>
                   {timetable.filter(t => t.day === day).sort((a, b) => a.start_time.localeCompare(b.start_time)).map(t => (
-                    <div key={t.id} style={s.slot}>
-                      <span style={s.slotTime}>{t.start_time}–{t.end_time}</span>
-                      <span style={{ flex: 1, fontSize: 13, color: '#1a1a2e' }}>{t.topic || t.paper}</span>
-                      <span style={{ fontSize: 12, color: '#475569' }}>{fmtDur(t.duration_mins)}</span>
-                      <button style={s.delBtn} onClick={() => deleteTT(t.id)}>✕</button>
+                    <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', background: '#F9FAFB', borderRadius: 8, marginBottom: 6, border: '1px solid #E5E7EB' }}>
+                      <span style={{ fontSize: 12, color: '#1a3c5e', fontWeight: 600, minWidth: 90 }}>{t.start_time}–{t.end_time}</span>
+                      <span style={{ flex: 1, fontSize: 13, color: '#374151' }}>{t.topic || t.paper}</span>
+                      <span style={{ fontSize: 11, color: '#6B7280' }}>{fmtDur(t.duration_mins)}</span>
+                      <button onClick={() => deleteTT(t.id)} style={{ background: 'none', border: 'none', color: '#D1D5DB', cursor: 'pointer' }}>✕</button>
                     </div>
                   ))}
                 </div>
               ))}
-              {timetable.length === 0 && <p style={s.empty}>No slots added yet</p>}
+              {timetable.length === 0 && <p style={{ color: '#9CA3AF', fontSize: 13, textAlign: 'center', padding: 20 }}>No slots added yet</p>}
             </div>
           </div>
         )}
@@ -280,22 +269,31 @@ export default function Dashboard({ profile, onLogout }) {
         {tab === 'chapters' && (
           <div>
             {[['Paper 4 – Direct Tax', P4], ['Paper 5 – Indirect Tax', P5]].map(([paper, chs]) => (
-              <div key={paper} style={s.card}>
-                <p style={s.cardTitle}>{paper}</p>
+              <div key={paper} style={{ background: '#fff', border: '1px solid #E5E7EB', borderRadius: 8, padding: '20px', marginBottom: 16, boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+                <p style={{ fontSize: 15, fontWeight: 600, color: '#111827', marginBottom: 12 }}>{paper}</p>
                 {chs.map((ch, i) => {
                   const st = getChapterStatus(paper, i);
-                  const note = getChapterNote(paper, i);
+                  const sc = statusColors[st];
+                  const key = `${paper}-${i}`;
+                  const expanded = expandedChapter === key;
                   return (
-                    <div key={i} style={{ ...s.chRow, flexDirection: 'column', alignItems: 'flex-start', gap: 6 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%' }}>
-                        <span style={{ flex: 1, fontSize: 13, color: '#1a1a2e' }}>Ch {i + 1} – {ch}</span>
-                        <select style={{ fontSize: 11, border: 'none', borderRadius: 6, padding: '4px 8px', background: STATUS_COLOR[st], color: STATUS_TEXT[st], fontWeight: 600 }}
-                          value={st} onChange={e => updateChapter(paper, i, ch, e.target.value)}>
+                    <div key={i} style={{ marginBottom: 8 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: '#F9FAFB', borderRadius: 8, border: '1px solid #E5E7EB', cursor: 'pointer' }} onClick={() => setExpandedChapter(expanded ? null : key)}>
+                        <span style={{ fontSize: 12, color: '#9CA3AF', minWidth: 24 }}>Ch {i + 1}</span>
+                        <span style={{ flex: 1, fontSize: 13, color: '#374151', fontWeight: 500 }}>{ch}</span>
+                        <select style={{ fontSize: 11, border: `1px solid ${sc.border}`, borderRadius: 6, padding: '3px 8px', background: sc.bg, color: sc.text, fontWeight: 600, cursor: 'pointer' }}
+                          value={st} onClick={e => e.stopPropagation()} onChange={e => updateChapter(paper, i, ch, e.target.value)}>
                           {STATUSES.map(s => <option key={s}>{s}</option>)}
                         </select>
+                        <span style={{ fontSize: 12, color: '#9CA3AF' }}>{expanded ? '▲' : '▼'}</span>
                       </div>
-                      <input style={{ ...s.input, fontSize: 12, padding: '6px 10px' }} placeholder="Add notes for this chapter..." value={note}
-                        onChange={e => saveChapterNote(paper, i, ch, e.target.value)} />
+                      {expanded && (
+                        <div style={{ padding: '10px 12px', background: '#fff', border: '1px solid #E5E7EB', borderTop: 'none', borderRadius: '0 0 8px 8px' }}>
+                          <label style={{ fontSize: 12, color: '#6B7280', display: 'block', marginBottom: 6 }}>📝 Notes for this chapter:</label>
+                          <textarea style={{ ...inp, minHeight: 80, resize: 'vertical', fontSize: 12 }} placeholder="Add your notes, key points, important formulas..." defaultValue={getChapterNote(paper, i)}
+                            onBlur={e => updateChapterNote(paper, i, ch, e.target.value)} />
+                        </div>
+                      )}
                     </div>
                   );
                 })}
@@ -305,58 +303,46 @@ export default function Dashboard({ profile, onLogout }) {
         )}
 
         {tab === 'tools' && (
-          <div>
-            <div style={s.card}>
-              <p style={s.cardTitle}>⏱ Pomodoro Timer</p>
-              <div style={{ textAlign: 'center', padding: '20px 0' }}>
-                <div style={{ fontSize: 56, fontWeight: 700, color: pomodoroMode === 'study' ? '#059669' : '#6ee7b7', marginBottom: 16 }}>{fmtSecs(pomodoroTime)}</div>
-                <p style={{ fontSize: 13, color: '#475569', marginBottom: 16 }}>{pomodoroMode === 'study' ? '📚 Study session' : pomodoroMode === 'short' ? '☕ Short break' : '🛋 Long break'}</p>
-                <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
-                  <button style={{ ...s.btn, background: '#047857' }} onClick={() => startPomodoro('study')}>▶ Study 25m</button>
-                  <button style={{ ...s.btn, background: '#059669' }} onClick={() => startPomodoro('short')}>☕ Break 5m</button>
-                  <button style={{ ...s.btn, background: '#0891b2' }} onClick={() => startPomodoro('long')}>🛋 Long 15m</button>
-                  <button style={{ ...s.btn, background: '#475569' }} onClick={() => setPomodoroRunning(r => !r)}>{pomodoroRunning ? '⏸ Pause' : '▶ Resume'}</button>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
+            <div style={{ background: '#fff', border: '1px solid #E5E7EB', borderRadius: 8, padding: '20px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+              <p style={{ fontSize: 15, fontWeight: 600, color: '#111827', marginBottom: 16 }}>⏱ Pomodoro Timer</p>
+              <div style={{ textAlign: 'center', padding: '16px 0' }}>
+                <div style={{ fontSize: 52, fontWeight: 700, color: pomodoroMode === 'study' ? '#1a3c5e' : '#059669', marginBottom: 8, fontFamily: 'monospace' }}>{fmtSecs(pomodoroTime)}</div>
+                <p style={{ fontSize: 12, color: '#9CA3AF', marginBottom: 16 }}>{pomodoroMode === 'study' ? '📚 Study session' : pomodoroMode === 'short' ? '☕ Short break' : '🛋 Long break'}</p>
+                <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
+                  <button style={{ ...btnPrimary, padding: '8px 14px', fontSize: 12 }} onClick={() => { setPomodoroMode('study'); setPomodoroTime(25 * 60); setPomodoroRunning(true); }}>📚 25m</button>
+                  <button style={{ ...btnPrimary, padding: '8px 14px', fontSize: 12, background: '#059669' }} onClick={() => { setPomodoroMode('short'); setPomodoroTime(5 * 60); setPomodoroRunning(true); }}>☕ 5m</button>
+                  <button style={{ ...btnPrimary, padding: '8px 14px', fontSize: 12, background: '#0891B2' }} onClick={() => { setPomodoroMode('long'); setPomodoroTime(15 * 60); setPomodoroRunning(true); }}>🛋 15m</button>
+                  <button style={{ ...btnPrimary, padding: '8px 14px', fontSize: 12, background: '#6B7280' }} onClick={() => setPomodoroRunning(r => !r)}>{pomodoroRunning ? '⏸ Pause' : '▶ Resume'}</button>
                 </div>
               </div>
             </div>
 
-            <div style={s.card}>
-              <p style={s.cardTitle}>☕ Break Tracker</p>
+            <div style={{ background: '#fff', border: '1px solid #E5E7EB', borderRadius: 8, padding: '20px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+              <p style={{ fontSize: 15, fontWeight: 600, color: '#111827', marginBottom: 16 }}>☕ Break Tracker</p>
               <div style={{ textAlign: 'center', padding: '16px 0' }}>
-                <div style={{ fontSize: 40, fontWeight: 700, color: breakRunning ? '#fbbf24' : '#475569', marginBottom: 12 }}>{fmtSecs(breakElapsed)}</div>
-                <button style={{ ...s.btn, background: breakRunning ? '#dc2626' : '#d97706' }} onClick={toggleBreak}>
+                <div style={{ fontSize: 44, fontWeight: 700, color: breakRunning ? '#D97706' : '#9CA3AF', marginBottom: 12, fontFamily: 'monospace' }}>{fmtSecs(breakElapsed)}</div>
+                <button style={{ ...btnPrimary, background: breakRunning ? '#DC2626' : '#D97706' }} onClick={() => { if (breakRunning) setBreakRunning(false); else { setBreakElapsed(0); setBreakRunning(true); } }}>
                   {breakRunning ? '⏹ Stop Break' : '☕ Start Break'}
                 </button>
               </div>
             </div>
 
-            <div style={s.card}>
-              <p style={s.cardTitle}>💧 Water Tracker</p>
-              <div style={{ textAlign: 'center', padding: '16px 0' }}>
-                <div style={{ fontSize: 48, marginBottom: 8 }}>{'💧'.repeat(Math.min(waterCount, 8))}</div>
-                <p style={{ color: '#475569', fontSize: 13, marginBottom: 16 }}>{waterCount} / 8 glasses today</p>
+            <div style={{ background: '#fff', border: '1px solid #E5E7EB', borderRadius: 8, padding: '20px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+              <p style={{ fontSize: 15, fontWeight: 600, color: '#111827', marginBottom: 16 }}>💧 Water Tracker</p>
+              <div style={{ textAlign: 'center', padding: '8px 0' }}>
+                <div style={{ fontSize: 28, marginBottom: 8, letterSpacing: 4 }}>{'💧'.repeat(waterCount)}{'○'.repeat(Math.max(0, 8 - waterCount))}</div>
+                <p style={{ fontSize: 13, color: '#6B7280', marginBottom: 16 }}>{waterCount} / 8 glasses today</p>
                 <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
-                  <button style={{ ...s.btn, background: '#0284c7' }} onClick={() => setWaterCount(w => Math.min(w + 1, 8))}>+ Drink Water</button>
-                  <button style={{ ...s.btn, background: '#475569' }} onClick={() => setWaterCount(0)}>Reset</button>
+                  <button style={{ ...btnPrimary, background: '#0284C7' }} onClick={() => setWaterCount(w => Math.min(w + 1, 8))}>+ Drink Water</button>
+                  <button style={{ ...btnPrimary, background: '#6B7280' }} onClick={() => setWaterCount(0)}>Reset</button>
                 </div>
               </div>
             </div>
 
-            <div style={s.card}>
-              <p style={s.cardTitle}>💡 Today's Motivation</p>
-              <div style={{ padding: '16px', background: '#1e1b4b', borderRadius: 10, borderLeft: '3px solid #047857' }}>
-                <p style={{ color: '#c4b5fd', fontSize: 15, lineHeight: 1.6, fontStyle: 'italic' }}>"{quote}"</p>
-              </div>
-            </div>
-
-            <div style={s.card}>
-              <p style={s.cardTitle}>📋 Quick Revision Planner</p>
-              {[...P4.slice(0,5).map(c => ({ch: c, paper: 'P4'})), ...P5.slice(0,5).map(c => ({ch: c, paper: 'P5'}))].map((item, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid #ffffff' }}>
-                  <span style={{ fontSize: 13, color: '#1a1a2e', flex: 1 }}>{item.paper}: {item.ch}</span>
-                  <span style={{ ...s.badge, background: item.paper === 'P4' ? '#d1fae5' : '#d1fae5', color: item.paper === 'P4' ? '#059669' : '#6ee7b7' }}>{item.paper}</span>
-                </div>
-              ))}
+            <div style={{ background: '#fff', border: '1px solid #E5E7EB', borderLeft: '4px solid #1a3c5e', borderRadius: 8, padding: '20px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+              <p style={{ fontSize: 15, fontWeight: 600, color: '#111827', marginBottom: 12 }}>💡 Today's Motivation</p>
+              <p style={{ color: '#374151', fontSize: 14, lineHeight: 1.6, fontStyle: 'italic' }}>"{quote}"</p>
             </div>
           </div>
         )}
@@ -366,42 +352,8 @@ export default function Dashboard({ profile, onLogout }) {
 }
 
 function Field({ label, children }) {
-  return <div style={{ marginBottom: 12 }}><label style={{ display: 'block', fontSize: 12, color: '#475569', marginBottom: 4, fontWeight: 500 }}>{label}</label>{children}</div>;
+  return <div style={{ marginBottom: 12 }}><label style={{ display: 'block', fontSize: 12, color: '#6B7280', marginBottom: 4, fontWeight: 500 }}>{label}</label>{children}</div>;
 }
 
-const s = {
-  app: { minHeight: '100vh', background: '#f8fafc', maxWidth: 720, margin: '0 auto' },
-  header: { background: 'linear-gradient(135deg, #059669, #047857)', color: '#fff', padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
-  headerTitle: { fontSize: 16, fontWeight: 700, color: '#059669' },
-  headerSub: { fontSize: 11, opacity: 0.7, marginTop: 2 },
-  logoutBtn: { background: 'rgba(167,139,250,0.2)', color: '#059669', border: '1px solid #059669', borderRadius: 8, padding: '6px 14px', fontSize: 13 },
-  tabs: { display: 'flex', background: '#ffffff', borderBottom: '1px solid #1a1a2e', overflowX: 'auto' },
-  tab: { padding: '12px 14px', fontSize: 12, border: 'none', background: 'none', color: '#475569', whiteSpace: 'nowrap', borderBottom: '2px solid transparent' },
-  activeTab: { color: '#059669', borderBottom: '2px solid #059669', fontWeight: 600 },
-  content: { padding: 16 },
-  alert: { background: '#14532d', color: '#6ee7b7', padding: '10px 16px', fontSize: 13, textAlign: 'center' },
-  quoteBox: { background: '#1e1b4b', borderLeft: '3px solid #047857', borderRadius: 10, padding: '12px 16px', marginBottom: 16, color: '#c4b5fd', fontSize: 13, fontStyle: 'italic', lineHeight: 1.5 },
-  countdown: { background: 'linear-gradient(135deg, #059669, #047857)', borderRadius: 14, padding: '20px', marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
-  cdLabel: { fontSize: 12, color: '#475569' },
-  cdVal: { fontSize: 26, fontWeight: 700, color: '#059669' },
-  metricGrid: { display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10, marginBottom: 12 },
-  metric: { background: '#ffffff', borderRadius: 12, padding: '14px', textAlign: 'center', border: '1px solid #1a1a2e' },
-  metricVal: { fontSize: 18, fontWeight: 700, color: '#059669' },
-  metricLbl: { fontSize: 11, color: '#475569', marginTop: 4 },
-  card: { background: '#ffffff', borderRadius: 14, padding: '16px', marginBottom: 16, border: '1px solid #1a1a2e' },
-  cardTitle: { fontSize: 14, fontWeight: 600, color: '#1a1a2e', marginBottom: 14 },
-  logRow: { display: 'flex', alignItems: 'flex-start', gap: 10, paddingBottom: 10, marginBottom: 10, borderBottom: '1px solid #ffffff' },
-  logDot: { width: 8, height: 8, borderRadius: '50%', background: '#047857', marginTop: 6, flexShrink: 0 },
-  logTitle: { fontSize: 13, fontWeight: 500, color: '#1a1a2e' },
-  logMeta: { fontSize: 11, color: '#475569', marginTop: 2 },
-  badge: { display: 'inline-block', fontSize: 10, padding: '1px 6px', borderRadius: 4, fontWeight: 500, marginLeft: 4 },
-  empty: { color: '#475569', fontSize: 13, textAlign: 'center', padding: '20px 0' },
-  input: { width: '100%', border: '1px solid #1a1a2e', borderRadius: 8, padding: '9px 12px', fontSize: 13, outline: 'none', background: '#f8fafc', color: '#1a1a2e' },
-  btn: { background: '#047857', color: '#fff', border: 'none', borderRadius: 10, padding: '11px 20px', fontSize: 13, fontWeight: 600, marginTop: 4, cursor: 'pointer' },
-  delBtn: { background: 'none', border: 'none', color: '#475569', fontSize: 14, padding: '2px 6px', cursor: 'pointer' },
-  row: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 },
-  dayHeader: { fontSize: 11, fontWeight: 600, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 },
-  slot: { display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: '#f8fafc', borderRadius: 8, marginBottom: 6, border: '1px solid #1a1a2e' },
-  slotTime: { fontSize: 11, color: '#059669', fontWeight: 600, minWidth: 85 },
-  chRow: { display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid #ffffff' },
-};
+const inp = { width: '100%', border: '1px solid #D1D5DB', borderRadius: 6, padding: '8px 12px', fontSize: 13, outline: 'none', background: '#fff', color: '#111827', boxSizing: 'border-box' };
+const btnPrimary = { background: '#1a3c5e', color: '#fff', border: 'none', borderRadius: 6, padding: '10px 20px', fontSize: 13, fontWeight: 600, cursor: 'pointer' };
