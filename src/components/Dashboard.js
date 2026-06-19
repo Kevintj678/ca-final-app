@@ -265,8 +265,8 @@ export default function Dashboard({ profile, onLogout }) {
                   {timetable.filter(t => t.day === day).sort((a, b) => a.start_time.localeCompare(b.start_time)).map(t => (
                     <div key={t.id} style={s.slot}>
                       <span style={s.slotTime}>{t.start_time}–{t.end_time}</span>
-                      <span style={{ flex: 1, fontSize: 13, color: '#e2e8f0' }}>{t.topic || t.paper}</span>
-                      <span style={{ fontSize: 12, color: '#94a3b8' }}>{fmtDur(t.duration_mins)}</span>
+                      <span style={{ flex: 1, fontSize: 13, color: '#1a1a2e' }}>{t.topic || t.paper}</span>
+                      <span style={{ fontSize: 12, color: '#475569' }}>{fmtDur(t.duration_mins)}</span>
                       <button style={s.delBtn} onClick={() => deleteTT(t.id)}>✕</button>
                     </div>
                   ))}
@@ -288,7 +288,7 @@ export default function Dashboard({ profile, onLogout }) {
                   return (
                     <div key={i} style={{ ...s.chRow, flexDirection: 'column', alignItems: 'flex-start', gap: 6 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%' }}>
-                        <span style={{ flex: 1, fontSize: 13, color: '#e2e8f0' }}>Ch {i + 1} – {ch}</span>
+                        <span style={{ flex: 1, fontSize: 13, color: '#1a1a2e' }}>Ch {i + 1} – {ch}</span>
                         <select style={{ fontSize: 11, border: 'none', borderRadius: 6, padding: '4px 8px', background: STATUS_COLOR[st], color: STATUS_TEXT[st], fontWeight: 600 }}
                           value={st} onChange={e => updateChapter(paper, i, ch, e.target.value)}>
                           {STATUSES.map(s => <option key={s}>{s}</option>)}
@@ -310,7 +310,7 @@ export default function Dashboard({ profile, onLogout }) {
               <p style={s.cardTitle}>⏱ Pomodoro Timer</p>
               <div style={{ textAlign: 'center', padding: '20px 0' }}>
                 <div style={{ fontSize: 56, fontWeight: 700, color: pomodoroMode === 'study' ? '#a78bfa' : '#6ee7b7', marginBottom: 16 }}>{fmtSecs(pomodoroTime)}</div>
-                <p style={{ fontSize: 13, color: '#94a3b8', marginBottom: 16 }}>{pomodoroMode === 'study' ? '📚 Study session' : pomodoroMode === 'short' ? '☕ Short break' : '🛋 Long break'}</p>
+                <p style={{ fontSize: 13, color: '#475569', marginBottom: 16 }}>{pomodoroMode === 'study' ? '📚 Study session' : pomodoroMode === 'short' ? '☕ Short break' : '🛋 Long break'}</p>
                 <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
                   <button style={{ ...s.btn, background: '#7c3aed' }} onClick={() => startPomodoro('study')}>▶ Study 25m</button>
                   <button style={{ ...s.btn, background: '#059669' }} onClick={() => startPomodoro('short')}>☕ Break 5m</button>
@@ -323,7 +323,7 @@ export default function Dashboard({ profile, onLogout }) {
             <div style={s.card}>
               <p style={s.cardTitle}>☕ Break Tracker</p>
               <div style={{ textAlign: 'center', padding: '16px 0' }}>
-                <div style={{ fontSize: 40, fontWeight: 700, color: breakRunning ? '#fbbf24' : '#94a3b8', marginBottom: 12 }}>{fmtSecs(breakElapsed)}</div>
+                <div style={{ fontSize: 40, fontWeight: 700, color: breakRunning ? '#fbbf24' : '#475569', marginBottom: 12 }}>{fmtSecs(breakElapsed)}</div>
                 <button style={{ ...s.btn, background: breakRunning ? '#dc2626' : '#d97706' }} onClick={toggleBreak}>
                   {breakRunning ? '⏹ Stop Break' : '☕ Start Break'}
                 </button>
@@ -334,7 +334,7 @@ export default function Dashboard({ profile, onLogout }) {
               <p style={s.cardTitle}>💧 Water Tracker</p>
               <div style={{ textAlign: 'center', padding: '16px 0' }}>
                 <div style={{ fontSize: 48, marginBottom: 8 }}>{'💧'.repeat(Math.min(waterCount, 8))}</div>
-                <p style={{ color: '#94a3b8', fontSize: 13, marginBottom: 16 }}>{waterCount} / 8 glasses today</p>
+                <p style={{ color: '#475569', fontSize: 13, marginBottom: 16 }}>{waterCount} / 8 glasses today</p>
                 <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
                   <button style={{ ...s.btn, background: '#0284c7' }} onClick={() => setWaterCount(w => Math.min(w + 1, 8))}>+ Drink Water</button>
                   <button style={{ ...s.btn, background: '#475569' }} onClick={() => setWaterCount(0)}>Reset</button>
@@ -352,8 +352,8 @@ export default function Dashboard({ profile, onLogout }) {
             <div style={s.card}>
               <p style={s.cardTitle}>📋 Quick Revision Planner</p>
               {[...P4.slice(0,5).map(c => ({ch: c, paper: 'P4'})), ...P5.slice(0,5).map(c => ({ch: c, paper: 'P5'}))].map((item, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid #1e293b' }}>
-                  <span style={{ fontSize: 13, color: '#e2e8f0', flex: 1 }}>{item.paper}: {item.ch}</span>
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid #ffffff' }}>
+                  <span style={{ fontSize: 13, color: '#1a1a2e', flex: 1 }}>{item.paper}: {item.ch}</span>
                   <span style={{ ...s.badge, background: item.paper === 'P4' ? '#2d1b69' : '#1b3a2d', color: item.paper === 'P4' ? '#a78bfa' : '#6ee7b7' }}>{item.paper}</span>
                 </div>
               ))}
@@ -366,42 +366,42 @@ export default function Dashboard({ profile, onLogout }) {
 }
 
 function Field({ label, children }) {
-  return <div style={{ marginBottom: 12 }}><label style={{ display: 'block', fontSize: 12, color: '#94a3b8', marginBottom: 4, fontWeight: 500 }}>{label}</label>{children}</div>;
+  return <div style={{ marginBottom: 12 }}><label style={{ display: 'block', fontSize: 12, color: '#475569', marginBottom: 4, fontWeight: 500 }}>{label}</label>{children}</div>;
 }
 
 const s = {
-  app: { minHeight: '100vh', background: '#0f172a', maxWidth: 720, margin: '0 auto' },
-  header: { background: 'linear-gradient(135deg, #1e1b4b, #312e81)', color: '#fff', padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
+  app: { minHeight: '100vh', background: '#f8fafc', maxWidth: 720, margin: '0 auto' },
+  header: { background: 'linear-gradient(135deg, #534AB7, #7c3aed)', color: '#fff', padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
   headerTitle: { fontSize: 16, fontWeight: 700, color: '#a78bfa' },
   headerSub: { fontSize: 11, opacity: 0.7, marginTop: 2 },
   logoutBtn: { background: 'rgba(167,139,250,0.2)', color: '#a78bfa', border: '1px solid #a78bfa', borderRadius: 8, padding: '6px 14px', fontSize: 13 },
-  tabs: { display: 'flex', background: '#1e293b', borderBottom: '1px solid #334155', overflowX: 'auto' },
-  tab: { padding: '12px 14px', fontSize: 12, border: 'none', background: 'none', color: '#64748b', whiteSpace: 'nowrap', borderBottom: '2px solid transparent' },
+  tabs: { display: 'flex', background: '#ffffff', borderBottom: '1px solid #1a1a2e', overflowX: 'auto' },
+  tab: { padding: '12px 14px', fontSize: 12, border: 'none', background: 'none', color: '#475569', whiteSpace: 'nowrap', borderBottom: '2px solid transparent' },
   activeTab: { color: '#a78bfa', borderBottom: '2px solid #a78bfa', fontWeight: 600 },
   content: { padding: 16 },
   alert: { background: '#14532d', color: '#6ee7b7', padding: '10px 16px', fontSize: 13, textAlign: 'center' },
   quoteBox: { background: '#1e1b4b', borderLeft: '3px solid #7c3aed', borderRadius: 10, padding: '12px 16px', marginBottom: 16, color: '#c4b5fd', fontSize: 13, fontStyle: 'italic', lineHeight: 1.5 },
-  countdown: { background: 'linear-gradient(135deg, #1e1b4b, #312e81)', borderRadius: 14, padding: '20px', marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
-  cdLabel: { fontSize: 12, color: '#94a3b8' },
+  countdown: { background: 'linear-gradient(135deg, #534AB7, #7c3aed)', borderRadius: 14, padding: '20px', marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
+  cdLabel: { fontSize: 12, color: '#475569' },
   cdVal: { fontSize: 26, fontWeight: 700, color: '#a78bfa' },
   metricGrid: { display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10, marginBottom: 12 },
-  metric: { background: '#1e293b', borderRadius: 12, padding: '14px', textAlign: 'center', border: '1px solid #334155' },
+  metric: { background: '#ffffff', borderRadius: 12, padding: '14px', textAlign: 'center', border: '1px solid #1a1a2e' },
   metricVal: { fontSize: 18, fontWeight: 700, color: '#a78bfa' },
-  metricLbl: { fontSize: 11, color: '#64748b', marginTop: 4 },
-  card: { background: '#1e293b', borderRadius: 14, padding: '16px', marginBottom: 16, border: '1px solid #334155' },
-  cardTitle: { fontSize: 14, fontWeight: 600, color: '#e2e8f0', marginBottom: 14 },
-  logRow: { display: 'flex', alignItems: 'flex-start', gap: 10, paddingBottom: 10, marginBottom: 10, borderBottom: '1px solid #1e293b' },
+  metricLbl: { fontSize: 11, color: '#475569', marginTop: 4 },
+  card: { background: '#ffffff', borderRadius: 14, padding: '16px', marginBottom: 16, border: '1px solid #1a1a2e' },
+  cardTitle: { fontSize: 14, fontWeight: 600, color: '#1a1a2e', marginBottom: 14 },
+  logRow: { display: 'flex', alignItems: 'flex-start', gap: 10, paddingBottom: 10, marginBottom: 10, borderBottom: '1px solid #ffffff' },
   logDot: { width: 8, height: 8, borderRadius: '50%', background: '#7c3aed', marginTop: 6, flexShrink: 0 },
-  logTitle: { fontSize: 13, fontWeight: 500, color: '#e2e8f0' },
-  logMeta: { fontSize: 11, color: '#64748b', marginTop: 2 },
+  logTitle: { fontSize: 13, fontWeight: 500, color: '#1a1a2e' },
+  logMeta: { fontSize: 11, color: '#475569', marginTop: 2 },
   badge: { display: 'inline-block', fontSize: 10, padding: '1px 6px', borderRadius: 4, fontWeight: 500, marginLeft: 4 },
   empty: { color: '#475569', fontSize: 13, textAlign: 'center', padding: '20px 0' },
-  input: { width: '100%', border: '1px solid #334155', borderRadius: 8, padding: '9px 12px', fontSize: 13, outline: 'none', background: '#0f172a', color: '#e2e8f0' },
+  input: { width: '100%', border: '1px solid #1a1a2e', borderRadius: 8, padding: '9px 12px', fontSize: 13, outline: 'none', background: '#f8fafc', color: '#1a1a2e' },
   btn: { background: '#7c3aed', color: '#fff', border: 'none', borderRadius: 10, padding: '11px 20px', fontSize: 13, fontWeight: 600, marginTop: 4, cursor: 'pointer' },
   delBtn: { background: 'none', border: 'none', color: '#475569', fontSize: 14, padding: '2px 6px', cursor: 'pointer' },
   row: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 },
-  dayHeader: { fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 },
-  slot: { display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: '#0f172a', borderRadius: 8, marginBottom: 6, border: '1px solid #334155' },
+  dayHeader: { fontSize: 11, fontWeight: 600, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 },
+  slot: { display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: '#f8fafc', borderRadius: 8, marginBottom: 6, border: '1px solid #1a1a2e' },
   slotTime: { fontSize: 11, color: '#a78bfa', fontWeight: 600, minWidth: 85 },
-  chRow: { display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid #1e293b' },
+  chRow: { display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid #ffffff' },
 };
