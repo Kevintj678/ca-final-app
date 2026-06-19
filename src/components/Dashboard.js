@@ -179,7 +179,7 @@ export default function Dashboard({ profile, onLogout }) {
             <div style={s.quoteBox}>💡 "{quote}"</div>
             <div style={s.countdown}>
               <div><p style={s.cdLabel}>Days to Nov 2026 Exam</p><p style={s.cdVal}>{daysLeft} days left</p></div>
-              <div style={{ textAlign: 'right' }}><p style={s.cdLabel}>Batch</p><p style={{ fontWeight: 600, color: '#a78bfa' }}>{profile.batch}</p></div>
+              <div style={{ textAlign: 'right' }}><p style={s.cdLabel}>Batch</p><p style={{ fontWeight: 600, color: '#059669' }}>{profile.batch}</p></div>
             </div>
             <div style={s.metricGrid}>
               {[['📚 Total studied', fmtDur(totalMins)],['⏰ Today', fmtDur(todayMins)],['📄 Paper 4', fmtDur(p4Mins)],['📄 Paper 5', fmtDur(p5Mins)]].map(([l, v]) => (
@@ -197,7 +197,7 @@ export default function Dashboard({ profile, onLogout }) {
                 <div key={l.id} style={s.logRow}>
                   <div style={s.logDot}></div>
                   <div style={{ flex: 1 }}>
-                    <p style={s.logTitle}>{l.topic} <span style={{ ...s.badge, background: l.paper.includes('4') ? '#2d1b69' : '#1b3a2d', color: l.paper.includes('4') ? '#a78bfa' : '#6ee7b7' }}>{l.paper.includes('4') ? 'P4' : 'P5'}</span></p>
+                    <p style={s.logTitle}>{l.topic} <span style={{ ...s.badge, background: l.paper.includes('4') ? '#d1fae5' : '#d1fae5', color: l.paper.includes('4') ? '#059669' : '#6ee7b7' }}>{l.paper.includes('4') ? 'P4' : 'P5'}</span></p>
                     <p style={s.logMeta}>{l.date} · {l.start_time}–{l.end_time} · {fmtDur(l.duration_mins)} · {l.session_type}</p>
                   </div>
                 </div>
@@ -230,7 +230,7 @@ export default function Dashboard({ profile, onLogout }) {
                 <div key={l.id} style={s.logRow}>
                   <div style={s.logDot}></div>
                   <div style={{ flex: 1 }}>
-                    <p style={s.logTitle}>{l.topic} <span style={{ ...s.badge, background: l.paper.includes('4') ? '#2d1b69' : '#1b3a2d', color: l.paper.includes('4') ? '#a78bfa' : '#6ee7b7' }}>{l.paper.includes('4') ? 'P4' : 'P5'}</span></p>
+                    <p style={s.logTitle}>{l.topic} <span style={{ ...s.badge, background: l.paper.includes('4') ? '#d1fae5' : '#d1fae5', color: l.paper.includes('4') ? '#059669' : '#6ee7b7' }}>{l.paper.includes('4') ? 'P4' : 'P5'}</span></p>
                     <p style={s.logMeta}>{l.date} · {l.start_time}–{l.end_time} · {fmtDur(l.duration_mins)}</p>
                     {l.notes && <p style={{ ...s.logMeta, fontStyle: 'italic' }}>{l.notes}</p>}
                   </div>
@@ -309,10 +309,10 @@ export default function Dashboard({ profile, onLogout }) {
             <div style={s.card}>
               <p style={s.cardTitle}>⏱ Pomodoro Timer</p>
               <div style={{ textAlign: 'center', padding: '20px 0' }}>
-                <div style={{ fontSize: 56, fontWeight: 700, color: pomodoroMode === 'study' ? '#a78bfa' : '#6ee7b7', marginBottom: 16 }}>{fmtSecs(pomodoroTime)}</div>
+                <div style={{ fontSize: 56, fontWeight: 700, color: pomodoroMode === 'study' ? '#059669' : '#6ee7b7', marginBottom: 16 }}>{fmtSecs(pomodoroTime)}</div>
                 <p style={{ fontSize: 13, color: '#475569', marginBottom: 16 }}>{pomodoroMode === 'study' ? '📚 Study session' : pomodoroMode === 'short' ? '☕ Short break' : '🛋 Long break'}</p>
                 <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
-                  <button style={{ ...s.btn, background: '#7c3aed' }} onClick={() => startPomodoro('study')}>▶ Study 25m</button>
+                  <button style={{ ...s.btn, background: '#047857' }} onClick={() => startPomodoro('study')}>▶ Study 25m</button>
                   <button style={{ ...s.btn, background: '#059669' }} onClick={() => startPomodoro('short')}>☕ Break 5m</button>
                   <button style={{ ...s.btn, background: '#0891b2' }} onClick={() => startPomodoro('long')}>🛋 Long 15m</button>
                   <button style={{ ...s.btn, background: '#475569' }} onClick={() => setPomodoroRunning(r => !r)}>{pomodoroRunning ? '⏸ Pause' : '▶ Resume'}</button>
@@ -344,7 +344,7 @@ export default function Dashboard({ profile, onLogout }) {
 
             <div style={s.card}>
               <p style={s.cardTitle}>💡 Today's Motivation</p>
-              <div style={{ padding: '16px', background: '#1e1b4b', borderRadius: 10, borderLeft: '3px solid #7c3aed' }}>
+              <div style={{ padding: '16px', background: '#1e1b4b', borderRadius: 10, borderLeft: '3px solid #047857' }}>
                 <p style={{ color: '#c4b5fd', fontSize: 15, lineHeight: 1.6, fontStyle: 'italic' }}>"{quote}"</p>
               </div>
             </div>
@@ -354,7 +354,7 @@ export default function Dashboard({ profile, onLogout }) {
               {[...P4.slice(0,5).map(c => ({ch: c, paper: 'P4'})), ...P5.slice(0,5).map(c => ({ch: c, paper: 'P5'}))].map((item, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid #ffffff' }}>
                   <span style={{ fontSize: 13, color: '#1a1a2e', flex: 1 }}>{item.paper}: {item.ch}</span>
-                  <span style={{ ...s.badge, background: item.paper === 'P4' ? '#2d1b69' : '#1b3a2d', color: item.paper === 'P4' ? '#a78bfa' : '#6ee7b7' }}>{item.paper}</span>
+                  <span style={{ ...s.badge, background: item.paper === 'P4' ? '#d1fae5' : '#d1fae5', color: item.paper === 'P4' ? '#059669' : '#6ee7b7' }}>{item.paper}</span>
                 </div>
               ))}
             </div>
@@ -371,37 +371,37 @@ function Field({ label, children }) {
 
 const s = {
   app: { minHeight: '100vh', background: '#f8fafc', maxWidth: 720, margin: '0 auto' },
-  header: { background: 'linear-gradient(135deg, #534AB7, #7c3aed)', color: '#fff', padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
-  headerTitle: { fontSize: 16, fontWeight: 700, color: '#a78bfa' },
+  header: { background: 'linear-gradient(135deg, #059669, #047857)', color: '#fff', padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
+  headerTitle: { fontSize: 16, fontWeight: 700, color: '#059669' },
   headerSub: { fontSize: 11, opacity: 0.7, marginTop: 2 },
-  logoutBtn: { background: 'rgba(167,139,250,0.2)', color: '#a78bfa', border: '1px solid #a78bfa', borderRadius: 8, padding: '6px 14px', fontSize: 13 },
+  logoutBtn: { background: 'rgba(167,139,250,0.2)', color: '#059669', border: '1px solid #059669', borderRadius: 8, padding: '6px 14px', fontSize: 13 },
   tabs: { display: 'flex', background: '#ffffff', borderBottom: '1px solid #1a1a2e', overflowX: 'auto' },
   tab: { padding: '12px 14px', fontSize: 12, border: 'none', background: 'none', color: '#475569', whiteSpace: 'nowrap', borderBottom: '2px solid transparent' },
-  activeTab: { color: '#a78bfa', borderBottom: '2px solid #a78bfa', fontWeight: 600 },
+  activeTab: { color: '#059669', borderBottom: '2px solid #059669', fontWeight: 600 },
   content: { padding: 16 },
   alert: { background: '#14532d', color: '#6ee7b7', padding: '10px 16px', fontSize: 13, textAlign: 'center' },
-  quoteBox: { background: '#1e1b4b', borderLeft: '3px solid #7c3aed', borderRadius: 10, padding: '12px 16px', marginBottom: 16, color: '#c4b5fd', fontSize: 13, fontStyle: 'italic', lineHeight: 1.5 },
-  countdown: { background: 'linear-gradient(135deg, #534AB7, #7c3aed)', borderRadius: 14, padding: '20px', marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
+  quoteBox: { background: '#1e1b4b', borderLeft: '3px solid #047857', borderRadius: 10, padding: '12px 16px', marginBottom: 16, color: '#c4b5fd', fontSize: 13, fontStyle: 'italic', lineHeight: 1.5 },
+  countdown: { background: 'linear-gradient(135deg, #059669, #047857)', borderRadius: 14, padding: '20px', marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
   cdLabel: { fontSize: 12, color: '#475569' },
-  cdVal: { fontSize: 26, fontWeight: 700, color: '#a78bfa' },
+  cdVal: { fontSize: 26, fontWeight: 700, color: '#059669' },
   metricGrid: { display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10, marginBottom: 12 },
   metric: { background: '#ffffff', borderRadius: 12, padding: '14px', textAlign: 'center', border: '1px solid #1a1a2e' },
-  metricVal: { fontSize: 18, fontWeight: 700, color: '#a78bfa' },
+  metricVal: { fontSize: 18, fontWeight: 700, color: '#059669' },
   metricLbl: { fontSize: 11, color: '#475569', marginTop: 4 },
   card: { background: '#ffffff', borderRadius: 14, padding: '16px', marginBottom: 16, border: '1px solid #1a1a2e' },
   cardTitle: { fontSize: 14, fontWeight: 600, color: '#1a1a2e', marginBottom: 14 },
   logRow: { display: 'flex', alignItems: 'flex-start', gap: 10, paddingBottom: 10, marginBottom: 10, borderBottom: '1px solid #ffffff' },
-  logDot: { width: 8, height: 8, borderRadius: '50%', background: '#7c3aed', marginTop: 6, flexShrink: 0 },
+  logDot: { width: 8, height: 8, borderRadius: '50%', background: '#047857', marginTop: 6, flexShrink: 0 },
   logTitle: { fontSize: 13, fontWeight: 500, color: '#1a1a2e' },
   logMeta: { fontSize: 11, color: '#475569', marginTop: 2 },
   badge: { display: 'inline-block', fontSize: 10, padding: '1px 6px', borderRadius: 4, fontWeight: 500, marginLeft: 4 },
   empty: { color: '#475569', fontSize: 13, textAlign: 'center', padding: '20px 0' },
   input: { width: '100%', border: '1px solid #1a1a2e', borderRadius: 8, padding: '9px 12px', fontSize: 13, outline: 'none', background: '#f8fafc', color: '#1a1a2e' },
-  btn: { background: '#7c3aed', color: '#fff', border: 'none', borderRadius: 10, padding: '11px 20px', fontSize: 13, fontWeight: 600, marginTop: 4, cursor: 'pointer' },
+  btn: { background: '#047857', color: '#fff', border: 'none', borderRadius: 10, padding: '11px 20px', fontSize: 13, fontWeight: 600, marginTop: 4, cursor: 'pointer' },
   delBtn: { background: 'none', border: 'none', color: '#475569', fontSize: 14, padding: '2px 6px', cursor: 'pointer' },
   row: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 },
   dayHeader: { fontSize: 11, fontWeight: 600, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 },
   slot: { display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: '#f8fafc', borderRadius: 8, marginBottom: 6, border: '1px solid #1a1a2e' },
-  slotTime: { fontSize: 11, color: '#a78bfa', fontWeight: 600, minWidth: 85 },
+  slotTime: { fontSize: 11, color: '#059669', fontWeight: 600, minWidth: 85 },
   chRow: { display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid #ffffff' },
 };
